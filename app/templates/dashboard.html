@@ -118,12 +118,12 @@
             }
             fetchAuditTimeline();
         });
-        async function uploadData(url, inputId) {
+               async function uploadData(url, inputId) {
             const fileInput = document.getElementById(inputId);
             if (!fileInput.files || fileInput.files.length === 0) return alert("Please select a verification document first!");
             
             const formData = new FormData();
-            # formData.append("file", fileInput.files[0]);
+            formData.append("file", fileInput.files[0]); 
 
             try {
                 const res = await fetch(url, { method: "POST", body: formData });
@@ -133,4 +133,66 @@
                     document.getElementById('reviewPanel').classList.remove('hidden');
                     document.getElementById('reviewMessage').innerText = data.message;
                     document.getElementById('reviewDetails').innerText = JSON.stringify(data.anomalies || data.extracted_draft, null, 2);
-} else {alert("Pipeline ingestion completed successfully!");document.getElementById('reviewPanel').classList.add('hidden');}} catch (err) {alert("Network interaction error occurred during file ingestion operations.");}fetchAuditTimeline();}async function triggerScheduler() {const res = await fetch('/api/v1/ingestion/trigger-scheduler', { method: 'POST' });const data = await res.json();alert(Scheduler Result Status: ${data.status}\nReason/Data: ${data.reason || JSON.stringify(data.reminders_sent_to)});fetchAuditTimeline();}async function fetchAuditTimeline() {const res = await fetch('/api/v1/mock/audit-timeline');const data = await res.json();const box = document.getElementById('auditTimelineBox');box.innerHTML = '';if (!data.session_replay_timeline || data.session_replay_timeline.length === 0) {box.innerHTML = 'No events recorded in this visual container yet.';return;}data.session_replay_timeline.forEach(evt => {const row = document.createElement('div');row.className = "p-2 bg-slate-950/60 rounded border-l-2 border-indigo-500 flex flex-col space-y-1 mb-1 text-left";row.innerHTML = <div class="flex justify-between text-slate-400 text-[10px]"> <span>⏱️ ${evt.time}</span> <span class="text-indigo-400">🔗 ID: ${evt.workflow_id.slice(0,8)}...</span> </div> <div class="text-slate-200"><strong class="text-emerald-400">[${evt.who}]</strong> Executed: <span class="text-amber-300 font-semibold">${evt.action}</span></div> <div class="text-slate-400 text-[11px] bg-slate-900/80 p-1.5 rounded mt-1 font-mono">${JSON.stringify(evt.details_captured)}</div>;box.appendChild(row);});}function dismissReview() {alert("Administrative override validation executed. Unlocked from draft holding canvas state command.");document.getElementById('reviewPanel').classList.add('hidden');document.getElementById('resolverInput').value = '';fetchAuditTimeline();}fetchAuditTimeline();{% endraw %}
+                } else {
+                    alert("Pipeline ingestion completed successfully!");
+                    document.getElementById('reviewPanel').classList.add('hidden');
+                }
+            } catch (err) {
+                alert("Network interaction error occurred during file ingestion operations.");
+            }
+            fetchAuditTimeline();
+        }
+
+        async function triggerScheduler() {
+            try {
+                const res = await fetch('/api/v1/ingestion/trigger-scheduler', { method: 'POST' });
+                const data = await res.json();
+                alert(`Scheduler Result Status: ${data.status}\nReason/Data: ${data.reason || JSON.stringify(data.reminders_sent_to)}`);
+            } catch (err) {
+                alert("Error triggering reminder engine execution job.");
+            }
+            fetchAuditTimeline();
+        }
+
+        async function fetchAuditTimeline() {
+            try {
+                const res = await fetch('/api/v1/mock/audit-timeline');
+                const data = await res.json();
+                const box = document.getElementById('auditTimelineBox');
+                box.innerHTML = '';
+                
+                if (!data.session_replay_timeline || data.session_replay_timeline.length === 0) {
+                    box.innerHTML = '<div class="text-slate-500 italic">No events recorded in this visual container yet.</div>';
+                    return;
+                }
+                
+                data.session_replay_timeline.forEach(evt => {
+                    const row = document.createElement('div');
+                    row.className = "p-2 bg-slate-950/60 rounded border-l-2 border-indigo-500 flex flex-col space-y-1 mb-1 text-left";
+                    row.innerHTML = `
+                        <div class="flex justify-between text-slate-400 text-[10px]"> 
+                            <span>⏱️ ${evt.time}</span> 
+                            <span class="text-indigo-400">🔗 ID: ${evt.workflow_id.slice(0,8)}...</span> 
+                        </div> 
+                        <div class="text-slate-200">
+                            <strong class="text-emerald-400">[${evt.who}]</strong> Executed: <span class="text-amber-300 font-semibold">${evt.action}</span>
+                        </div> 
+                        <div class="text-slate-400 text-[11px] bg-slate-900/80 p-1.5 rounded mt-1 font-mono">${JSON.stringify(evt.details_captured)}</div>
+                    `;
+                    box.appendChild(row);
+                });
+            } catch (err) {
+                console.error("Error drawing unified audit tracking graph container timeline views.");
+            }
+        }
+
+        function dismissReview() {
+            alert("Administrative override validation executed. Unlocked from draft holding canvas state command.");
+            document.getElementById('reviewPanel').classList.add('hidden');
+            document.getElementById('resolverInput').value = '';
+            fetchAuditTimeline();
+        }
+
+        // Initialize historical timeline logs during load state
+        fetchAuditTimeline();
+
