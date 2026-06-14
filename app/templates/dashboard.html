@@ -1,10 +1,11 @@
-<!-- app/templates/dashboard.html -->
+<!-- app/templates/dashboard.html --
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>School Operations Agent Platform - Unified Dashboard</title>
-    <script src="https://tailwindcss.com"></script>
+    <!-- Updated to stable, official Tailwind Play CDN for immediate runtime component parsing -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen">
     <div class="container mx-auto p-6 max-w-7xl">
@@ -104,9 +105,14 @@
     <script>
         // Connect to Server-Sent Events (SSE) stream for instant student status changes
         const eventSource = new EventSource('/api/v1/mock/stream');
+        
         eventSource.addEventListener('student_update', function(e) {
             const data = JSON.parse(e.data);
-            const badge = document.getElementById('status-' + data.student_id);
+            // Dynamic routing to locate specific student element targets
+            const targetId = (data.student_id === 'student_01_alex') ? 'student_01' : 
+                             (data.student_id === 'student_02_raja') ? 'student_02' : data.student_id;
+            
+            const badge = document.getElementById('status-' + targetId);
             if (badge) {
                 badge.innerText = data.status;
                 badge.className = `text-xs font-bold px-2 py-1 rounded inline-block mt-2 ${
@@ -115,27 +121,19 @@
                     'bg-slate-800 text-slate-400'
                 }`;
             }
-            fetchAuditTimeline(); // Refresh tracking timeline immediately upon streaming alerts
+            fetchAuditTimeline(); // Instantly update tracing graph canvas
         });
 
         async function uploadData(url, inputId) {
             const fileInput = document.getElementById(inputId);
-            if (!fileInput.files[0]) return alert("Please select a verification document first!");
+            if (!fileInput.files || fileInput.files.length === 0) return alert("Please select a verification document first!");
             
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
 
-            const res = await fetch(url, { method: "POST", body: formData });
-            const data = await res.json();
-            
-            if (data.status === "REQUIRES_CLARIFICATION") {
-                document.getElementById('reviewPanel').classList.remove('hidden');
-                document.getElementById('reviewMessage').innerText = data.message;
-                document.getElementById('reviewDetails').innerText = JSON.stringify(data.anomalies || data.extracted_draft, null, 2);
-            } else {
-                alert("Pipeline ingestion completed successfully!");
-                document.getElementById('reviewPanel').classList.add('hidden');
-            }
-            fetchAuditTimeline();
-        }
-
+            try {
+                const res = await fetch(url, { method: "POST", body: formData });
+                const data = await res.json();
+                
+                if (data.status === "REQUIRES_CLARIFICATION") {
+                    document.getElementById('reviewPanel').classList.remove('hidden');
