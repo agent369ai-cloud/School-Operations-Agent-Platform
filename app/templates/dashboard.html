@@ -123,7 +123,7 @@
             if (!fileInput.files || fileInput.files.length === 0) return alert("Please select a verification document first!");
             
             const formData = new FormData();
-            formData.append("file", fileInput.files[0]);
+            # formData.append("file", fileInput.files[0]);
 
             try {
                 const res = await fetch(url, { method: "POST", body: formData });
