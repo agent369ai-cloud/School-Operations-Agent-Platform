@@ -1,0 +1,141 @@
+<!-- app/templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>School Operations Agent Platform - Unified Dashboard</title>
+    <script src="https://tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen">
+    <div class="container mx-auto p-6 max-w-7xl">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold text-indigo-400">Lincoln High School</h1>
+                <p class="text-slate-400 text-sm mt-1">Role-Aware System Agent Dashboard Canvas</p>
+            </div>
+            <div class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 text-right">
+                <span class="text-xs text-slate-400 block font-semibold uppercase">Logged User Profile</span>
+                <span class="text-sm font-bold text-emerald-400">Principal Reynolds (ADMIN)</span>
+            </div>
+        </header>
+
+        <!-- Main Workspace Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Grid Pane: Data Ingestion Controls -->
+            <div class="space-y-6">
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-xl">
+                    <h2 class="text-lg font-bold text-indigo-300 mb-4 flex items-center">📁 Data Intake Pipelines</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Upload Assignment Form Block -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Upload Assignment Brief (TXT/PDF)</label>
+                            <input type="file" id="assignmentFile" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer bg-slate-900 rounded-md border border-slate-700 p-1"/>
+                            <button onclick="uploadData('/api/v1/ingestion/upload-brief', 'assignmentFile')" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-md transition duration-200">Parse Assignment Instructions</button>
+                        </div>
+
+                        <!-- Upload CSV Roster Form Block -->
+                        <div class="pt-4 border-t border-slate-700">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Upload Student Roster (CSV File)</label>
+                            <input type="file" id="rosterFile" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer bg-slate-900 rounded-md border border-slate-700 p-1"/>
+                            <button onclick="uploadData('/api/v1/ingestion/upload-roster', 'rosterFile')" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 rounded-md transition duration-200">Ingest Class Roster</button>
+                        </div>
+
+                        <!-- Manual Scheduler Trigger Block -->
+                        <div class="pt-4 border-t border-slate-700">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Alert Reminders Engine</label>
+                            <button onclick="triggerScheduler()" class="w-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2 rounded-md transition duration-200">Trigger Policy Engine Manually</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anomalies & Action Review Panel Canvas -->
+                <div id="reviewPanel" class="bg-slate-800 rounded-xl p-6 border border-amber-500/30 shadow-xl hidden bg-gradient-to-b from-slate-800 to-amber-950/20">
+                    <h3 class="text-amber-400 font-bold text-sm uppercase tracking-wider flex items-center mb-2">⚠️ Review Action Required ("Ask, Don't Guess")</h3>
+                    <p id="reviewMessage" class="text-xs text-slate-300 mb-4"></p>
+                    <div id="reviewDetails" class="bg-slate-900 p-3 rounded text-xs font-mono text-slate-400 max-h-40 overflow-y-auto mb-4 border border-slate-700"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="resolverInput" placeholder="Resolve ambiguity data entry input here..." class="bg-slate-900 text-xs rounded border border-slate-700 p-2 flex-grow focus:outline-none focus:border-amber-500 text-slate-200"/>
+                        <button onclick="dismissReview()" class="bg-amber-500 text-slate-950 px-4 text-xs font-bold rounded hover:bg-amber-400 transition">Approve</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Grid Pane: Dashboards Display Logs (2/3 width) -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Live Teacher Dashboard Panel Tracking Student States via Server Stream -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-xl">
+                    <h2 class="text-lg font-bold text-emerald-400 mb-4 flex items-center">📊 Active Grade 7-A Teacher Dashboard Panel</h2>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center">
+                            <span class="text-xs text-slate-400 block font-semibold">Student: Alex</span>
+                            <span id="status-student_01" class="text-xs font-bold px-2 py-1 rounded inline-block mt-2 bg-slate-800 text-slate-400">IN PROGRESS</span>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center">
+                            <span class="text-xs text-slate-400 block font-semibold">Student: Raja</span>
+                            <span id="status-student_02" class="text-xs font-bold px-2 py-1 rounded inline-block mt-2 bg-slate-800 text-slate-400">IN PROGRESS</span>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center">
+                            <span class="text-xs text-slate-400 block font-semibold">Student: Suresh</span>
+                            <span id="status-student_03" class="text-xs font-bold px-2 py-1 rounded inline-block mt-2 bg-slate-800 text-slate-400">SILENT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unified Live Realtime Audit Ledger Replay Log Stream -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-slate-200">📜 Immutable Tracking History Replay Engine</h2>
+                        <button onclick="fetchAuditTimeline()" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 underline">Refresh Entire Audit Log</button>
+                    </div>
+                    <div id="auditTimelineBox" class="bg-slate-900 rounded-xl p-4 font-mono text-xs text-slate-300 space-y-2 max-h-80 overflow-y-auto border border-slate-700 h-64">
+                        <div class="text-slate-500 italic">No events recorded in this visual container yet. Begin active file or webhook testing above.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Realtime Integration Framework Logic -->
+    <script>
+        // Connect to Server-Sent Events (SSE) stream for instant student status changes
+        const eventSource = new EventSource('/api/v1/mock/stream');
+        eventSource.addEventListener('student_update', function(e) {
+            const data = JSON.parse(e.data);
+            const badge = document.getElementById('status-' + data.student_id);
+            if (badge) {
+                badge.innerText = data.status;
+                badge.className = `text-xs font-bold px-2 py-1 rounded inline-block mt-2 ${
+                    data.status === 'BLOCKED' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                    data.status === 'SUBMITTED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 
+                    'bg-slate-800 text-slate-400'
+                }`;
+            }
+            fetchAuditTimeline(); // Refresh tracking timeline immediately upon streaming alerts
+        });
+
+        async function uploadData(url, inputId) {
+            const fileInput = document.getElementById(inputId);
+            if (!fileInput.files[0]) return alert("Please select a verification document first!");
+            
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const res = await fetch(url, { method: "POST", body: formData });
+            const data = await res.json();
+            
+            if (data.status === "REQUIRES_CLARIFICATION") {
+                document.getElementById('reviewPanel').classList.remove('hidden');
+                document.getElementById('reviewMessage').innerText = data.message;
+                document.getElementById('reviewDetails').innerText = JSON.stringify(data.anomalies || data.extracted_draft, null, 2);
+            } else {
+                alert("Pipeline ingestion completed successfully!");
+                document.getElementById('reviewPanel').classList.add('hidden');
+            }
+            fetchAuditTimeline();
+        }
+
