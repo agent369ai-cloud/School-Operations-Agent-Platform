@@ -99,9 +99,6 @@
 
         </div>
     </div>
-
-    <!-- 🆕 {% raw %} ని యాడ్ చేయడం ద్వారా జింజా ఇంజన్ ఈ కింద ఉన్న జావాస్క్రిప్ట్ ను డిస్టర్బ్ చేయకుండా లాక్ చేస్తున్నాం -->
-    {% raw %}
     <script>
         const eventSource = new EventSource('/api/v1/mock/stream');
         
@@ -121,13 +118,12 @@
             }
             fetchAuditTimeline();
         });
-
         async function uploadData(url, inputId) {
             const fileInput = document.getElementById(inputId);
             if (!fileInput.files || fileInput.files.length === 0) return alert("Please select a verification document first!");
             
             const formData = new FormData();
-            formData.append("file", fileInput.files[0]); // 👈 ఇక్కడ మొదటి ఫైల్ ను కరెక్ట్ గా పంపుతున్నాం
+            formData.append("file", fileInput.files[0]);
 
             try {
                 const res = await fetch(url, { method: "POST", body: formData });
