@@ -6,3 +6,4 @@ sqlalchemy
 sse-starlette
 openai
 python-multipart
+jinja2
