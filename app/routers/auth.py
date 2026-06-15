@@ -1,16 +1,15 @@
 # app/routers/auth.py
 import uuid
+import bcrypt
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
-from passlib.context import CryptContext
 from jose import jwt
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
-
 from app.database import get_db
 from app.models import School, User
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# ❌ REMOVED: pwd_context = CryptContext(...) - No more passlib!
 router = APIRouter()
 
 class SchoolRegisterIn(BaseModel):
@@ -31,8 +30,12 @@ def register_school(payload: SchoolRegisterIn, db: Session = Depends(get_db)):
         
     new_school = School(id=str(uuid.uuid4()), name=payload.school_name)
     db.add(new_school)
+
+    # Clean, modern native bcrypt hashing
+    password_bytes = payload.password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
     
-    hashed_password = pwd_context.hash(payload.password)
     new_admin = User(
         id=str(uuid.uuid4()),
         school_id=new_school.id,
@@ -48,8 +51,20 @@ def register_school(payload: SchoolRegisterIn, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(payload: LoginIn, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
-    if not user or not user.password_hash or not pwd_context.verify(payload.password, user.password_hash):
+    
+    # ─── NATIVE BCRYPT VERIFICATION ──────────────────────────────────────────
+    # Check if user exists and has a password hash
+    if not user or not user.password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials.")
+    
+    # Convert inputs to bytes to let native bcrypt compare them safely
+    password_bytes = payload.password.encode('utf-8')
+    hashed_bytes = user.password_hash.encode('utf-8')
+    
+    # Use bcrypt's native verification check
+    if not bcrypt.checkpw(password_bytes, hashed_bytes):
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
+    # ─────────────────────────────────────────────────────────────────────────
         
     expiration = datetime.now(timezone.utc) + timedelta(hours=8)
     token_claims = {"sub": user.id, "role": user.role, "school_id": user.school_id, "exp": expiration}
