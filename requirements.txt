@@ -7,3 +7,5 @@ sse-starlette
 openai
 python-multipart
 jinja2
+passlib[bcrypt]
+python-jose[cryptography]

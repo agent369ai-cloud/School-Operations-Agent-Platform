@@ -38,11 +38,9 @@ def parse_assignment_brief(document_text: str) -> ParsedAssignment:
                 {"role": "user", "content": document_text}
             ]
         )
-        
-        
-        raw_json_str = response.choices.message.content.strip()
-        
-        
+
+        raw_json_str = response.choices[0].message.content.strip()
+                
         if raw_json_str.startswith("```"):
             lines = raw_json_str.splitlines()
            

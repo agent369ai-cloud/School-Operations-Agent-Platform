@@ -1,12 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.models import Base
-
-# For rapid development, we use SQLite local file.
-# Change this string to your Neon/Supabase Postgres URL later if needed.
-DATABASE_URL = "sqlite:///./school.db"
-
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+from app.config import settings
+engine = create_engine(settings.DATABASE_URL, connect_args={"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
@@ -18,3 +14,5 @@ def get_db():
         yield db
     finally:
         db.close()
+
+

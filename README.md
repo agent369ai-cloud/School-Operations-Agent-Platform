@@ -59,7 +59,7 @@ uvicorn app.main:app --reload
 ```
 
 ### 4. Open Interactive Testing Panel
-Navigate your web browser to **`http://127.0.0`** to verify and execute the unified workflow milestones:
+Navigate your web browser to **`http://127.0.0.1:8000`** to verify and execute the unified workflow milestones:
 1.  **Ingestion Walkthrough (`POST /upload-brief`)**: Upload a plain text file missing a deadline to see the `DRAFT` status and structural query generation.
 2.  **Chat Simulation (`POST /webhook`)**: Send a message containing `"blocked"` to watch the server dynamically flag student statuses.
 3.  **Policy Evaluation (`POST /trigger-scheduler`)**: Manually execute the alert engine to view regional compliance tracking.
